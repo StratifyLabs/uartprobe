@@ -79,19 +79,22 @@ int main(int argc, char * argv[]) {
 		o_flags |= Uart::FLAG_IS_PARITY_NONE;
 	}
 
+
 	Uart uart(uart_port);
-	if( uart.open(Uart::NONBLOCK) < 0 ){
+	if( uart.open(Uart::RDWR) < 0 ){
 		printf("Failed to open UART port %d\n", uart_port);
 		perror("Failed");
 		exit(1);
 	}
 
 	if( is_default ){
+		printf("Starting Uart probe on port %d with default settings\n", uart_port);
 		if( uart.set_attr() < 0 ){
 			printf("Uart does not have a default configuration\n");
 			exit(1);
 		}
 	} else {
+		printf("Starting Uart probe on port %d at %dbps\n", uart_port, freq);
 		if( uart.set_attr(o_flags, freq, width, pin_assignment) < 0 ){
 			printf("Failed to configure UART\n");
 			perror("Failed\n");
@@ -109,6 +112,8 @@ int main(int argc, char * argv[]) {
 
 	printf("Stopping\n");
 	m_stop = true;
+
+	input_thread.kill(Signal::CONT); //this will interrupt the blocking UART read and cause m_stop to be read
 	input_thread.join(); //this will suspend until input_thread is finished
 
 
@@ -128,7 +133,6 @@ void * process_uart_input(void * args){
 		if( uart->read(input.cdata(), input.capacity()) > 0 ){
 			input.printf();
 		}
-		Timer::wait_msec(1);
 	} while( !m_stop );
 
 	return 0;
@@ -136,5 +140,6 @@ void * process_uart_input(void * args){
 
 
 void show_usage(){
-	printf("Usage:\n");
+	printf("Usage:\tuartprobe -p port [-f bitrate] [-tx X.Y -rx X.Y] [-even] [-odd] [-default] \n");
+	printf("Default settings are 115200,8,n,1\n");
 }
