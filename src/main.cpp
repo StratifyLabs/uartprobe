@@ -32,21 +32,11 @@ int main(int argc, char * argv[]) {
 	Cli cli(argc, argv);
 	cli.set_publisher("Stratify Labs, Inc");
 	cli.handle_version();
-	int uart_port = -1;
 	bool is_default = false;
-	UartPinAssignment pin_assignment;
+	UartAttr uart_attr;
 	Thread input_thread(2048, false);
 
-	u32 o_flags;
-	int freq = 115200;
-	int width = 8;
-
-	o_flags = Uart::FLAG_SET_CONTROL_LINE_STATE;
-
-	if( cli.is_option("-p") ){
-		uart_port = cli.get_option_value("-p");
-	} else {
-		printf("Error: must specify UART port using -p option\n");
+	if( cli.handle_uart(uart_attr) == false ) {
 		show_usage();
 		exit(1);
 	}
@@ -55,47 +45,22 @@ int main(int argc, char * argv[]) {
 		is_default = true;
 	}
 
-	if( cli.is_option("-f") ){
-		freq = cli.get_option_value("-f");
-	}
-
-	if( cli.is_option("-w") ){
-		width = cli.get_option_value("-w");
-	}
-
-	if( cli.is_option("-rx") ){
-		pin_assignment->rx = cli.get_option_pin("-rx");
-	}
-
-	if( cli.is_option("-tx") ){
-		pin_assignment->tx = cli.get_option_pin("-tx");
-	}
-
-	if( cli.is_option("-even") ){
-		o_flags |= Uart::FLAG_IS_PARITY_EVEN;
-	} else if( cli.is_option("-odd") ){
-		o_flags |= Uart::FLAG_IS_PARITY_ODD;
-	} else {
-		o_flags |= Uart::FLAG_IS_PARITY_NONE;
-	}
-
-
-	Uart uart(uart_port);
+	Uart uart(uart_attr.port());
 	if( uart.open(Uart::RDWR) < 0 ){
-		printf("Failed to open UART port %d\n", uart_port);
+		printf("Failed to open UART port %d\n", uart_attr.port());
 		perror("Failed");
 		exit(1);
 	}
 
 	if( is_default ){
-		printf("Starting Uart probe on port %d with default settings\n", uart_port);
+		printf("Starting Uart probe on port %d with default settings\n", uart_attr.port());
 		if( uart.set_attr() < 0 ){
 			printf("Uart does not have a default configuration\n");
 			exit(1);
 		}
 	} else {
-		printf("Starting Uart probe on port %d at %dbps\n", uart_port, freq);
-		if( uart.set_attr(o_flags, freq, width, pin_assignment) < 0 ){
+		printf("Starting Uart probe on port %d at %ldbps\n", uart_attr.port(), uart_attr.freq());
+		if( uart.set_attr(uart_attr) < 0 ){
 			printf("Failed to configure UART\n");
 			perror("Failed\n");
 			exit(1);
@@ -132,6 +97,7 @@ void * process_uart_input(void * args){
 		input.clear();
 		if( uart->read(input.cdata(), input.capacity()) > 0 ){
 			input.printf();
+			fflush(stdout);
 		}
 	} while( !m_stop );
 
