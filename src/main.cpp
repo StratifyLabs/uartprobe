@@ -96,7 +96,7 @@ void * process_uart_input(void * args){
 	do {
 		input.clear();
 		if( uart->read(input.cdata(), input.capacity()) > 0 ){
-			input.printf();
+            input.print();
 			fflush(stdout);
 		}
 	} while( !m_stop );

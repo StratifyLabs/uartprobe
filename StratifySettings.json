@@ -1,5 +1,16 @@
 {
     "buildprefix": "build_",
+    "change": "Support up to Cortex M7 arch",
+    "changes": {
+        "-L7AWdAZt_0OhrecDbnQ": {
+            "description": "",
+            "version": "1.0"
+        },
+        "-L9fURUyU3tjqrxaPt_j": {
+            "description": "Support up to Cortex M7 arch",
+            "version": "1.1"
+        }
+    },
     "description": "uartprobe is a program that connects any UART port to the STDIO for reading and writing.",
     "github": "https://github.com/StratifyLabs/uartprobe",
     "hardwareid": "",
@@ -9,5 +20,6 @@
     "ram": 0,
     "tags": "demo",
     "type": "StratifyApp",
-    "version": "0.1"
+    "uid": "QSW7bQHeDqhJEcZ0mxQ5SmEYUSL2",
+    "version": "1.1"
 }
